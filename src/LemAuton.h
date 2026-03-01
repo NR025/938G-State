@@ -10,24 +10,23 @@
 
 #ifndef _PROS_AUTON_H_
 #define _PROS_AUTON_H_
-//Declare auton utility variables.
 
-//Declare auton functions.
-//void _LateralMovement (float XCoord, float YCoord, int Time, bool Forward=true);
-//void _AngularMovement (float Angle, int Time, bool Direction);
+#define LEFT_DISTANCE_SENSOR_TO_CENTER  6.5
+#define RIGHT_DISTANCE_SENSOR_TO_CENTER  6.5
+#define FRONT_DISTANCE_SENSOR_TO_CENTER  5
+#define BACK_DISTANCE_SENSOR_TO_CENTER  6.5
+#define HALF_FIELD_DISTANCE 72
 
-//Declare auton path functions.
-void _PathLemT ();
-void _PathLemN ();
-void _PathLemL ();
-void _PathLemR ();
-void _PathLemA ();
-void _PathLemS ();
+// Utility functions.
+float getDistanceInInches(pros::Distance& sensor);
+void matchLoad();
+void outtake();
+
+// Path functions.
+void getToFirstMatchLoader();
+
 void _PathLemSkills ();
 void _PathLemSkillsWithFourthMatchLoader();
 void _MovementWithDistanceSensor();
 
-//Declare auton path functions.
-void _OuttakeT ();
-void _OuttakeL (); 
 #endif //_PROS_AUTON_H_ 
