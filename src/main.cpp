@@ -134,7 +134,7 @@ void testOuttake() {
 	pros::delay(5000);
 	BFlywheel.brake();
 	pros::delay(5000);
-	outtake();
+	outtake(1500);
 }
 
 /**

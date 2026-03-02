@@ -20,10 +20,10 @@
 // Utility functions.
 float getDistanceInInches(pros::Distance& sensor);
 void matchLoad(int arcadeSpeed);
-void outtake();
+void outtake(int arcadeTime);
 float calculateDistanceFromFront();
-float calculateDistanceFromLeft();
-float calculateDistanceFromRight();
+float calculateDistanceLeftSide();
+float calculateDistanceRightSide();
 float calculateDistanceFromBack();
 void driveForwardTillDistanceUsingBackSensor(float distanceInInches);
 
