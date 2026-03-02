@@ -19,14 +19,28 @@
 
 // Utility functions.
 float getDistanceInInches(pros::Distance& sensor);
-void matchLoad();
+void matchLoad(int arcadeSpeed);
 void outtake();
+float calculateDistanceFromFront();
+float calculateDistanceFromLeft();
+float calculateDistanceFromRight();
+float calculateDistanceFromBack();
+void driveForwardTillDistanceUsingBackSensor(float distanceInInches);
 
 // Path functions.
 void getToFirstMatchLoader();
+void getToFirstDropOff();
+void pickUpSecondMatchLoader();
+void getToSecondMatchLoader();
+void getToSecondDropOff();
+void getToThirdMatchLoader();
+void getToThirdDropOff();
+void getToThirdFourthLoader();
+void getToFourthDropOff();
+void park();
 
 void _PathLemSkills ();
 void _PathLemSkillsWithFourthMatchLoader();
-void _MovementWithDistanceSensor();
+void skillsWithDistanceSensor();
 
 #endif //_PROS_AUTON_H_ 

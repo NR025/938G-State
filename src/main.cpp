@@ -10,6 +10,7 @@
 #include "Lem_Initialize.h"
 #include "LemOpUtils.h"
 #include "LemAuton.h"
+#include "lemlib/timer.hpp"
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -112,6 +113,30 @@ void testTurn()	{
 	chassis.waitUntilDone();
 }
 
+void testDistanceSensors() {
+	chassis.setPose(0, 0, 0);
+	while (true) {
+		float frontDistance = getDistanceInInches(frontDistanceSensor);
+		float leftDistance = getDistanceInInches(leftDistanceSensor);
+		float rightDistance = getDistanceInInches(rightDistanceSensor);
+		float backDistance = getDistanceInInches(backDistanceSensor);
+		pros::lcd::print(1, "Front Distance: %f", frontDistance);
+		pros::lcd::print(2, "Left Distance: %f", leftDistance);
+		pros::lcd::print(3, "Right Distance: %f", rightDistance);
+		pros::lcd::print(4, "Back Distance: %f", backDistance);
+		pros::delay(100);
+	}
+}
+
+void testOuttake() {
+	lemlib::Timer loadTimer(2500);
+    BFlywheel.move(127);
+	pros::delay(5000);
+	BFlywheel.brake();
+	pros::delay(5000);
+	outtake();
+}
+
 /**
  * Runs the user autonomous code. This function will be started in its own task
  * with the default priority and stack size whenever the robot is enabled via
@@ -124,19 +149,14 @@ void testTurn()	{
  * from where it left off.
  */
 void autonomous() {
+	skillsWithDistanceSensor();
+
 	//# State the path.
 	//_PathLemSkills();
-	_MovementWithDistanceSensor();
+	//testDistanceSensors();
 	//testTurn();
 	//squareTest();
-
-	/*
-	while(true){
- 	   int dist = distance_sensor.get();
-       pros::lcd::print(2, "Distance: %d", dist);
-       pros::delay(20);
-	}
-	*/
+	//testOuttake();
 }
 
 
