@@ -349,7 +349,7 @@ float calculateDistanceFromFront() {
     return currentRobotDistanceFromStart;
 }
 
-float calculateDistanceLeftSide() {
+float calculateDistanceFromLeft() {
     // Calculate the actual robot position and ensure we drove the right 
     // distance in case we are off using the front distance sensor.
     float currentRobotDistanceFromWall = getDistanceInInches(leftDistanceSensor) + LEFT_DISTANCE_SENSOR_TO_CENTER;
@@ -357,7 +357,7 @@ float calculateDistanceLeftSide() {
     return currentRobotDistanceFromStart;
 }
 
-float calculateDistanceRightSide() {
+float calculateDistanceFromRight() {
     // Calculate the actual robot position and ensure we drove the right 
     // distance in case we are off using the front distance sensor.
     float currentRobotDistanceFromWall = getDistanceInInches(rightDistanceSensor) + RIGHT_DISTANCE_SENSOR_TO_CENTER;
@@ -372,7 +372,6 @@ float calculateDistanceFromBack() {
     float currentRobotDistanceFromStart = HALF_FIELD_DISTANCE - currentRobotDistanceFromWall;
     return currentRobotDistanceFromStart;
 }
-
 
 void outtake(int arcadeTime) {
     TFlywheel.move(127);
@@ -538,7 +537,7 @@ void getToFirstDropOff() {
     // sure we dont hit the goal.
     chassis.moveToPoint(-10, -61, 4000, {.forwards = false}); 
     chassis.waitUntilDone();
-    float currentY = calculateDistanceRightSide();
+    float currentY = calculateDistanceFromRight();
     chassis.setPose(-10, -1 * currentY, chassis.getPose().theta);
     // Finish the long straight.
     chassis.moveToPoint(-30, -61, 4000, {.forwards = false}); 
@@ -547,7 +546,7 @@ void getToFirstDropOff() {
 
     // Measure the distance of the left color distance from the wall.
     float currentX = calculateDistanceFromBack();
-    currentY = calculateDistanceRightSide();
+    currentY = calculateDistanceFromRight();
     chassis.setPose(-1 * currentX, -1 * currentY, chassis.getPose().theta);
     //pros::lcd::print(1, "X: %f\n", currentX); 
     //pros::lcd::print(2, "Y: %f\n", currentY); 
@@ -562,6 +561,70 @@ void getToFirstDropOff() {
     // -23 for some reason.
     chassis.moveToPoint(-23, -48, 2250, {.forwards = false, .maxSpeed = 80});
     chassis.waitUntilDone();
+}
+
+void getToFirstDropOffMotionChained() {
+    chassis.moveToPoint(50, -51, 2000, {.forwards = false, .minSpeed = 100});
+
+    // Wait for movement until 3 inches before bringing
+    // the intake up.
+    chassis.waitUntil(3);
+    PneumaticLoad.set_value(false);
+    
+    // Go to the other (blue) side of the field
+    chassis.moveToPoint(40, -61, 2000, {.forwards = false, .minSpeed = 100});
+    chassis.turnToHeading(90, 750, {.minSpeed = 100});
+
+    // This is the long straight.
+    // We continuously measure the distance from the wall. 
+    // If the robot gets too close to the goal, or too far from the wall.
+    // then we break and reset.
+    chassis.moveToPoint(-40, -61, 4000, {.forwards = false, .minSpeed = 100}); 
+    bool gotTooClose = false;
+    while (chassis.isInMotion()) {
+        float currentY = calculateDistanceFromRight();
+        if (currentY > 2) {
+            // We got too close to the goal.
+            // Stop the drive and reset the pose to the X,Y where we are.
+            float currentX = calculateDistanceFromBack();
+            chassis.setPose(-1 * currentX, -1 * currentY, chassis.getPose().theta);
+            gotTooClose = true;
+            break;
+        }
+        pros::delay(10); 
+    }
+      
+    // Finish the long straight, if we got too close to the goal and interrupted
+    // the straight drive.
+    if (gotTooClose == true) {
+        chassis.moveToPoint(-40, -61, 4000, {.forwards = false, .minSpeed = 100}); 
+    }
+
+    // Now swing and get to align with the goal and wait for this action to finish.
+    chassis.moveToPose(-40, -46, 270, 3000, {.forwards = false})
+    chassis.waitUntilDone();
+    
+    // Now measure where we are.
+    float currentX = calculateDistanceFromFront();
+    currentY = calculateDistanceFromLeft();
+    chassis.setPose(-1 * currentX, -1 * currentY, chassis.getPose().theta);
+    pros::lcd::print(1, "X: %f\n", currentX); 
+    pros::lcd::print(2, "Y: %f\n", currentY); 
+    pros::delay(10000);
+    
+    // Now align with the goal.
+    // The X should be -31 however it needs to be 
+    // -23 for some reason. We backup till the back
+    // distance sensor shows us that we are close to the goal.
+    chassis.moveToPoint(-23, -48, 2250, {.forwards = false, .maxSpeed = 80});
+    while (chassis.isInMotion()) {
+        float currentX = calculateDistanceFromBack();
+        if (currentX < 5.5) {
+            break;
+        }
+        pros::delay(10); 
+    }
+    chassis.cancelMotion();
 }
 
 void getToSecondMatchLoader() {
@@ -605,13 +668,39 @@ void getToThirdMatchLoader() {
     chassis.waitUntilDone();
 }
 
+void getToThirdMatchLoaderMotionChained() {
+    chassis.moveToPoint(-48, -48, 2000, {.minSpeed = 100});
+    chassis.turnToHeading(0, 1000, {.minSpeed = 100});
+    
+    // We want to get to (-48, 49) however we drive a little less intentionally
+    // and let the distance sensor fix us.
+    chassis.moveToPoint(-48, 40, 4000, {.minSpeed = 100});
+    chassis.waitUntilDone();
+
+    // Calculate the actual robot position and ensure we drove the right 
+    // distance in case we are off using the front distance sensor.
+    float currentY = calculateDistanceFromFront();
+    chassis.setPose(-48, currentY, 0);
+    chassis.moveToPose(-48, 49, 0, 2000, {.maxSpeed = 80});
+    chassis.waitUntilDone();
+
+    // Turn towards the match loader.
+    chassis.turnToHeading(270, 1000);
+    chassis.waitUntilDone();
+
+    // Bring down the loader and drive towards the loader.
+    PneumaticLoad.set_value(true);
+    chassis.moveToPoint(-55, 49, 4000, {.maxSpeed = 80});
+    chassis.waitUntilDone();
+}
+
 void getToThirdDropOff() {
     //pros::delay(10000);
     chassis.moveToPoint(-50, 49, 2000, {.forwards = false});
     chassis.waitUntilDone();
 
     // Measure the distance of the left color distance from the wall.
-    float currentY = calculateDistanceRightSide();
+    float currentY = calculateDistanceFromRight();
     chassis.setPose(-50, currentY, chassis.getPose().theta);
     //pros::lcd::print(2, "Y: %f\n", currentY); 
     PneumaticLoad.set_value(false);
@@ -628,7 +717,7 @@ void getToThirdDropOff() {
     chassis.waitUntilDone();
 
     // Measure how far we are from the wall so can correct
-    currentY = calculateDistanceRightSide();
+    currentY = calculateDistanceFromRight();
     chassis.setPose(10, currentY, chassis.getPose().theta);
     //pros::lcd::print(1, "Y: %f\n", currentY); 
     PneumaticLoad.set_value(false);
@@ -642,7 +731,7 @@ void getToThirdDropOff() {
 
     // Measure the distance of the right distance from the wall.
     float currentX = calculateDistanceFromBack();
-    currentY = calculateDistanceRightSide();
+    currentY = calculateDistanceFromRight();
     
     chassis.setPose(currentX, currentY, 270);
     //pros::lcd::print(1, "X: %f\n", currentX); 
@@ -660,6 +749,74 @@ void getToThirdDropOff() {
     // 22 for some reason.
     chassis.moveToPoint(22, 47, 2250, {.forwards = false, .maxSpeed = 80});
     chassis.waitUntilDone();
+}
+
+void getToThirdDropOffMotionChained() {
+    //pros::delay(10000);
+    chassis.moveToPoint(-50, 49, 2000, {.forwards = false, .minSpeed = 100});
+    // Wait for movement until 3 inches before bringing
+    // the intake up.
+    chassis.waitUntil(3);
+    PneumaticLoad.set_value(false);
+    
+    // Measure the distance of the left color distance from the wall.
+    //float currentY = calculateDistanceFromRight();
+    //chassis.setPose(-50, currentY, chassis.getPose().theta);
+    //pros::lcd::print(2, "Y: %f\n", currentY); 
+    //PneumaticLoad.set_value(false);
+    
+    // Go to the other (blue) side of the field
+    chassis.moveToPoint(-35, 61, 2000, {.forwards = false, .minSpeed = 100});
+    chassis.turnToHeading(270, 750, {.minSpeed = 100});
+
+    // The big straight starts here.    
+    chassis.moveToPoint(30, 61, 4000, {.forwards = false, .minSpeed = 100});
+    bool gotTooClose = false;
+    while (chassis.isInMotion()) {
+        float currentY = calculateDistanceFromRight();
+        if (currentY > 2) {
+            // We got too close to the goal.
+            // Stop the drive and reset the pose to the X,Y where we are.
+            float currentX = calculateDistanceFromBack();
+            chassis.setPose(-1 * currentX, -1 * currentY, chassis.getPose().theta);
+            gotTooClose = true;
+            break;
+        }
+        pros::delay(10); 
+    }
+    
+    // Finish the long straight, if we got too close to the goal and interrupted
+    // the straight drive.
+    if (gotTooClose == true) {
+        chassis.moveToPoint(30, 61, 4000, {.forwards = false, .minSpeed = 100});
+    }
+
+    // Now finally swing around to make sure we are alinged with the
+    // goal.
+    chassis.moveToPose(40, 46, 90, 2000, {.forwards = false});
+    chassis.waitUntilDone();
+
+    // Measure the distance of the right distance from the wall.
+    float currentX = calculateDistanceFromBack();
+    currentY = calculateDistanceFromLeft();
+    chassis.setPose(currentX, currentY, chassis.getPose().theta);
+    pros::lcd::print(1, "X: %f\n", currentX); 
+    pros::lcd::print(2, "Y: %f\n", currentY); 
+    pros::delay(10000);
+
+    // Now align with the goal.
+    // The X should be 31 however it needs to be 
+    // 22 for some reason. We backup till the back
+    // distance sensor shows us that we are close to the goal.
+    chassis.moveToPoint(22, 47, 2250, {.forwards = false, .maxSpeed = 80});
+    while (chassis.isInMotion()) {
+        float currentX = calculateDistanceFromBack();
+        if (currentX < 5.5) {
+            break;
+        }
+        pros::delay(10); 
+    }
+    chassis.cancelMotion();
 }
 
 void getToFourthMatchLoader() {
@@ -686,7 +843,30 @@ void park() {
     chassis.waitUntilDone();
 
     // Read the distance from the left and back and reset the pose.
-    float currentX = calculateDistanceLeftSide();
+    float currentX = calculateDistanceFromLeft();
+    float currentY = calculateDistanceFromBack();
+    chassis.setPose(currentX, currentY, 180);
+    //pros::lcd::print(1, "X: %f\n", currentX); 
+    //pros::lcd::print(2, "Y: %f\n", currentY); 
+    
+    BFlywheel.move(127);
+    chassis.moveToPoint(65, -10, 3000, {.maxSpeed = 127});
+    chassis.waitUntilDone();
+    //driveForwardTillDistanceUsingBackSensor(currentY + 8);
+    // Keep running the intake till the balls are all out.
+    pros::delay(2000);
+    BFlywheel.brake();
+}
+
+void parkMotionChained() {
+    PneumaticLoad.set_value(false);
+    chassis.moveToPoint(42, 47, 1500, {.minSpeed = 100});
+    chassis.moveToPose(65, 10, 180, 1500, {.minSpeed = 100});
+    chassis.turnToHeading(180, 1000, {.direction = AngularDirection::CW_CLOCKWISE});
+    chassis.waitUntilDone();
+
+    // Read the distance from the left and back and reset the pose.
+    float currentX = calculateDistanceFromLeft();
     float currentY = calculateDistanceFromBack();
     chassis.setPose(currentX, currentY, 180);
     //pros::lcd::print(1, "X: %f\n", currentX); 
@@ -717,7 +897,8 @@ void skillsWithDistanceSensor() {
     getToFirstMatchLoader();
     matchLoad(60, 3000);
     chassis.setPose(55, -51, chassis.getPose().theta);
-    getToFirstDropOff();
+    //getToFirstDropOff();
+    getToFirstDropOffMotionChained();
     outtake(1500);
 
     chassis.setPose(-31, -48, 270);
@@ -728,10 +909,12 @@ void skillsWithDistanceSensor() {
     outtake(1500);
     chassis.setPose(-31, -48, 270);
 
-    getToThirdMatchLoader();
+    //getToThirdMatchLoader();
+    getToThirdMatchLoaderMotionChained();
     matchLoad(60, 3000);
     chassis.setPose(-55, 49, chassis.getPose().theta);
-    getToThirdDropOff();
+    //getToThirdDropOff();
+    getToThirdDropOffMotionChained();
     outtake(1500);
     chassis.turnToHeading(90, 1000);
     chassis.setPose(31, 47, 90); 
@@ -744,5 +927,6 @@ void skillsWithDistanceSensor() {
     chassis.turnToHeading(90, 1000);
     chassis.setPose(31, 47, 90);
 
-    park();
+    //park();
+    parkMotionChained();
 }

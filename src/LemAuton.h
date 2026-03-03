@@ -22,8 +22,8 @@ float getDistanceInInches(pros::Distance& sensor);
 void matchLoad(int arcadeSpeed);
 void outtake(int arcadeTime);
 float calculateDistanceFromFront();
-float calculateDistanceLeftSide();
-float calculateDistanceRightSide();
+float calculateDistanceFromLeft();
+float calculateDistanceFromRight();
 float calculateDistanceFromBack();
 void driveForwardTillDistanceUsingBackSensor(float distanceInInches);
 
