@@ -572,59 +572,47 @@ void getToFirstDropOffMotionChained() {
     PneumaticLoad.set_value(false);
     
     // Go to the other (blue) side of the field
-    chassis.moveToPoint(40, -61, 2000, {.forwards = false, .minSpeed = 100});
-    chassis.turnToHeading(90, 750, {.minSpeed = 100});
+    chassis.moveToPoint(35, -63, 2000, {.forwards = false, .minSpeed = 100});
+    chassis.turnToHeading(90, 750, {.maxSpeed = 80, .minSpeed = 80});
 
     // This is the long straight.
     // We continuously measure the distance from the wall. 
     // If the robot gets too close to the goal, or too far from the wall.
     // then we break and reset.
-    chassis.moveToPoint(-40, -61, 4000, {.forwards = false, .minSpeed = 100}); 
-    bool gotTooClose = false;
-    while (chassis.isInMotion()) {
+    chassis.moveToPoint(-40, -63, 4000, {.forwards = false, .minSpeed = 40}); 
+    while (true) {
+        if (chassis.getPose().x <= -40) {
+            break;
+        }
         float currentY = calculateDistanceFromRight();
-        if (currentY > 2) {
+        if (currentY < 59) {
             // We got too close to the goal.
-            // Stop the drive and reset the pose to the X,Y where we are.
+            // Reset the drivetrain location and continue.
+            chassis.cancelAllMotions();
             float currentX = calculateDistanceFromBack();
             chassis.setPose(-1 * currentX, -1 * currentY, chassis.getPose().theta);
-            gotTooClose = true;
-            break;
+            chassis.moveToPoint(-40, -63, 4000, {.forwards = false, .maxSpeed = 80, .minSpeed = 40}); 
         }
         pros::delay(10); 
     }
-      
-    // Finish the long straight, if we got too close to the goal and interrupted
-    // the straight drive.
-    if (gotTooClose == true) {
-        chassis.moveToPoint(-40, -61, 4000, {.forwards = false, .minSpeed = 100}); 
-    }
 
     // Now swing and get to align with the goal and wait for this action to finish.
-    chassis.moveToPose(-40, -46, 270, 3000, {.forwards = false})
+    chassis.moveToPose(-40, -46, 270, 3000, {.forwards = false});
     chassis.waitUntilDone();
-    
+
     // Now measure where we are.
     float currentX = calculateDistanceFromFront();
-    currentY = calculateDistanceFromLeft();
+    float currentY = calculateDistanceFromLeft();
     chassis.setPose(-1 * currentX, -1 * currentY, chassis.getPose().theta);
-    pros::lcd::print(1, "X: %f\n", currentX); 
-    pros::lcd::print(2, "Y: %f\n", currentY); 
-    pros::delay(10000);
+    //pros::lcd::print(1, "X: %f\n", currentX); 
+    //pros::lcd::print(2, "Y: %f\n", currentY); 
     
     // Now align with the goal.
     // The X should be -31 however it needs to be 
     // -23 for some reason. We backup till the back
     // distance sensor shows us that we are close to the goal.
     chassis.moveToPoint(-23, -48, 2250, {.forwards = false, .maxSpeed = 80});
-    while (chassis.isInMotion()) {
-        float currentX = calculateDistanceFromBack();
-        if (currentX < 5.5) {
-            break;
-        }
-        pros::delay(10); 
-    }
-    chassis.cancelMotion();
+    chassis.waitUntilDone();
 }
 
 void getToSecondMatchLoader() {
@@ -752,7 +740,6 @@ void getToThirdDropOff() {
 }
 
 void getToThirdDropOffMotionChained() {
-    //pros::delay(10000);
     chassis.moveToPoint(-50, 49, 2000, {.forwards = false, .minSpeed = 100});
     // Wait for movement until 3 inches before bringing
     // the intake up.
@@ -766,31 +753,28 @@ void getToThirdDropOffMotionChained() {
     //PneumaticLoad.set_value(false);
     
     // Go to the other (blue) side of the field
-    chassis.moveToPoint(-35, 61, 2000, {.forwards = false, .minSpeed = 100});
-    chassis.turnToHeading(270, 750, {.minSpeed = 100});
+    chassis.moveToPoint(-35, 62, 2000, {.forwards = false, .minSpeed = 100});
+    chassis.turnToHeading(270, 750, {.maxSpeed = 80, .minSpeed = 80});
 
     // The big straight starts here.    
-    chassis.moveToPoint(30, 61, 4000, {.forwards = false, .minSpeed = 100});
-    bool gotTooClose = false;
-    while (chassis.isInMotion()) {
+    chassis.moveToPoint(30, 62, 4000, {.forwards = false, .minSpeed = 100});
+    while (true) {
+        if (chassis.getPose().x >= 30) {
+            break;
+        }
         float currentY = calculateDistanceFromRight();
-        if (currentY > 2) {
+        if (currentY < 59) {
             // We got too close to the goal.
             // Stop the drive and reset the pose to the X,Y where we are.
+            chassis.cancelAllMotions();
             float currentX = calculateDistanceFromBack();
-            chassis.setPose(-1 * currentX, -1 * currentY, chassis.getPose().theta);
-            gotTooClose = true;
+            chassis.setPose(currentX, currentY, chassis.getPose().theta);
+            chassis.moveToPoint(30, 62, 4000, {.forwards = false, .minSpeed = 100});
             break;
         }
         pros::delay(10); 
     }
     
-    // Finish the long straight, if we got too close to the goal and interrupted
-    // the straight drive.
-    if (gotTooClose == true) {
-        chassis.moveToPoint(30, 61, 4000, {.forwards = false, .minSpeed = 100});
-    }
-
     // Now finally swing around to make sure we are alinged with the
     // goal.
     chassis.moveToPose(40, 46, 90, 2000, {.forwards = false});
@@ -798,7 +782,7 @@ void getToThirdDropOffMotionChained() {
 
     // Measure the distance of the right distance from the wall.
     float currentX = calculateDistanceFromBack();
-    currentY = calculateDistanceFromLeft();
+    float currentY = calculateDistanceFromLeft();
     chassis.setPose(currentX, currentY, chassis.getPose().theta);
     pros::lcd::print(1, "X: %f\n", currentX); 
     pros::lcd::print(2, "Y: %f\n", currentY); 
@@ -809,14 +793,7 @@ void getToThirdDropOffMotionChained() {
     // 22 for some reason. We backup till the back
     // distance sensor shows us that we are close to the goal.
     chassis.moveToPoint(22, 47, 2250, {.forwards = false, .maxSpeed = 80});
-    while (chassis.isInMotion()) {
-        float currentX = calculateDistanceFromBack();
-        if (currentX < 5.5) {
-            break;
-        }
-        pros::delay(10); 
-    }
-    chassis.cancelMotion();
+    chassis.waitUntilDone();
 }
 
 void getToFourthMatchLoader() {
@@ -895,12 +872,13 @@ void driveForwardTillDistanceUsingBackSensor(float distanceInInches) {
 
 void skillsWithDistanceSensor() {
     getToFirstMatchLoader();
-    matchLoad(60, 3000);
+    matchLoad(80, 3000);
     chassis.setPose(55, -51, chassis.getPose().theta);
     //getToFirstDropOff();
     getToFirstDropOffMotionChained();
     outtake(1500);
 
+    /*
     chassis.setPose(-31, -48, 270);
     getToSecondMatchLoader();
     matchLoad(60, 3000);
@@ -909,6 +887,7 @@ void skillsWithDistanceSensor() {
     outtake(1500);
     chassis.setPose(-31, -48, 270);
 
+    
     //getToThirdMatchLoader();
     getToThirdMatchLoaderMotionChained();
     matchLoad(60, 3000);
@@ -929,4 +908,5 @@ void skillsWithDistanceSensor() {
 
     //park();
     parkMotionChained();
+    */
 }
