@@ -25,7 +25,7 @@ float calculateDistanceFromFront();
 float calculateDistanceFromLeft();
 float calculateDistanceFromRight();
 float calculateDistanceFromBack();
-void driveForwardTillDistanceUsingBackSensor(float distanceInInches);
+void driveForwardTillDistanceUsingBackSensor();
 
 // Path functions.
 void getToFirstMatchLoader();
