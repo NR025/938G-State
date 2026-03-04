@@ -23,11 +23,6 @@
 #include "lemlib/timer.hpp"
 
 //#Define auton utility variables.
-
-float getDistanceInInches(pros::Distance& sensor) {
-    return sensor.get() * 0.0393701;
-}
-
 void _PathLemSkills() {
     chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
     chassis.setPose(45, 0, 180);
