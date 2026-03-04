@@ -60,14 +60,13 @@ float calculateDistanceFromBack() {
     return currentRobotDistanceFromStart;
 }
 
-void outtake(int arcadeTime) {
+void outtake(int totalTime, int arcadeTime) {
     TFlywheel.move(127);
     BFlywheel.move(127);
     chassis.arcade(-80, 0);
     PneumaticLoad.set_value(false);
 
     // Start a 5s timer.
-    int totalTime = 3500;
     int arcadeCheckTime = totalTime - arcadeTime;
     if (arcadeCheckTime < 0) {
         arcadeCheckTime = 0;
@@ -90,7 +89,6 @@ void outtake(int arcadeTime) {
         }
 
         int intakeDistance = outtakeDistanceSensor.get();
-
         //pros::lcd::print(1, "Blocks: %d Time: %d\n", numBlocks, loadTimer.getTimeLeft()); 
         if (intakeDistance <= blockdistance && state == 0) {
             // Flip the state to one so we dont count
@@ -120,21 +118,26 @@ void outtake(int arcadeTime) {
     BFlywheel.brake();
 }
 
+void outtakeWithDistanceSensor(int totalTime, int arcadeTime) {
+    // Start pushing back into the goal.
+    chassis.arcade(-80, 0);
+    while (true) {
+        if (backDistanceSensor.get() <= 136) {
+            break;
+        }
+        pros::delay(10);
+    }
 
-void outtakeWithSensor(int arcadeTime) {
     TFlywheel.move(127);
     BFlywheel.move(127);
-    chassis.arcade(-60, 0);
     PneumaticLoad.set_value(false);
 
     // Start a 5s timer.
-    int totalTime = 3000;
     int arcadeCheckTime = totalTime - arcadeTime;
     if (arcadeCheckTime < 0) {
         arcadeCheckTime = 0;
     }
 
-    
     lemlib::Timer loadTimer(totalTime);
     
     // 276 is the distance in mm that the sensor reads when there are no blocks
@@ -142,40 +145,34 @@ void outtakeWithSensor(int arcadeTime) {
     int blockdistance = 110;
     int numBlocks = 0;
     int state = 0; // 0 = no blocks, 1 = one block
-    bool backup = true;
     while (numBlocks < 6 && !loadTimer.isDone()) {
 
         // Only push back into the goal for a second and half, do not push back more.
         // When we push more, the battery power is distributed and 
         // the outtake does not work as well.
-        float distFromGoalX = backDistanceSensor.get();
-        if (distFromGoalX < 133 && backup == true) {
-            chassis.arcade(-40,0);
-            backup = false;
-        }
-
         if (loadTimer.getTimeLeft() <= arcadeCheckTime) {
             chassis.arcade(0, 0);
-            backup = false;
         }
 
         int intakeDistance = outtakeDistanceSensor.get();
 
-        //pros::lcd::print(1, "Blocks %d Time: %d\n", numBlocks, loadTimer.getTimeLeft()); 
+        pros::lcd::print(1, "Blocks: %d Time: %d\n", numBlocks, loadTimer.getTimeLeft()); 
         if (intakeDistance <= blockdistance && state == 0) {
             // Flip the state to one so we dont count
             // the same block multiple times.
             state = 1;
-            numBlocks++;
         } else if (intakeDistance > blockdistance && state == 1) {
             // Flip the state back to zero so the next block
             // can be detected.
             state = 0;
+            numBlocks++;
         } 
 
         pros::delay(10);
     }
     loadTimer.pause();
+    pros::lcd::print(1, "Blocks: %d Time: %d\n", numBlocks, loadTimer.getTimeLeft()); 
+
 
     // We can add more intelligence here, if the number of 
     // balls are lower than 6, then we could try to unjam the outtake.
@@ -186,12 +183,9 @@ void outtakeWithSensor(int arcadeTime) {
     // Run the outtake for a bit longer to ensure we
     // got all the blocks.
     chassis.arcade(0, 0);
-    pros::delay(800);
     TFlywheel.brake();
     BFlywheel.brake();
 }
-
-
 
 // This function runs the intake till all the blocks are loaded.
 // The idea is to use timing and the distancec sensor to determine when the
@@ -639,12 +633,21 @@ void driveForwardTillDistanceUsingBackSensor() {
 }
 
 void skillsWithDistanceSensor() {
+    // IF we want to save time we should try and
+    // use 
+    // outtakeWithDistanceSensor(3500, 1000);
+    // And then change all the alignement with the
+    // goals to be distance based. We push close to the
+    // goal and the we use outtakeWithDistanceSensor.
+    // So will have to change the getToXXXDropOffMotionChained
+    // so that we are almost at the drop off.
+
     // Load the first set of blocks and dropoff.
     getToFirstMatchLoader();
     matchLoad(80, 3000);
     chassis.setPose(55, -52, chassis.getPose().theta);
     getToFirstDropOffMotionChained();
-    outtake(2000);
+    outtake(3500, 2000);
     chassis.setPose(-31, -48, 270);
 
     // Load the second set of blocks and dropoff.
@@ -652,7 +655,7 @@ void skillsWithDistanceSensor() {
     matchLoad(60, 3000);
     chassis.setPose(-55, -48, chassis.getPose().theta);
     getToSecondDropOff();
-    outtake(2000);
+    outtake(3500, 1000);
     chassis.setPose(-31, -48, 270);
 
     // Load the third set of blocks and dropoff.
@@ -660,7 +663,7 @@ void skillsWithDistanceSensor() {
     matchLoad(60, 3500);
     chassis.setPose(-55, 48, chassis.getPose().theta);
     getToThirdDropOffMotionChained();
-    outtake(1500);
+    outtake(3500, 1500);
     chassis.turnToHeading(90, 1000);
     chassis.setPose(31, 47, 90); 
 
@@ -669,7 +672,7 @@ void skillsWithDistanceSensor() {
     matchLoad(60, 3000);
     chassis.setPose(55, 46, chassis.getPose().theta);
     getToFourthDropOff();
-    outtake(1500);
+    outtake(3500, 1500);
     chassis.turnToHeading(90, 1000);
     chassis.setPose(31, 47, 90);
 
