@@ -150,7 +150,6 @@ void testOuttake() {
  */
 void autonomous() {
 	skillsWithDistanceSensor();
-
 	//# State the path.
 	//_PathLemSkills();
 	//testDistanceSensors();
