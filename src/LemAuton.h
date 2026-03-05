@@ -27,6 +27,7 @@ float calculateDistanceFromLeft();
 float calculateDistanceFromRight();
 float calculateDistanceFromBack();
 void driveForwardTillDistanceUsingBackSensor();
+void matchLoadWithStuckDetection(int arcadeSpeed, int time);
 
 // Path functions.
 void getToFirstMatchLoader();

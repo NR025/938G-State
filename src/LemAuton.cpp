@@ -60,6 +60,8 @@ float calculateDistanceFromBack() {
     return currentRobotDistanceFromStart;
 }
 
+
+
 void outtake(int totalTime, int arcadeTime) {
     TFlywheel.move(127);
     BFlywheel.move(127);
@@ -156,6 +158,92 @@ void outtakeWithDistanceSensor(int totalTime, int arcadeTime) {
 
         int intakeDistance = outtakeDistanceSensor.get();
 
+        //pros::lcd::print(1, "Blocks: %d Time: %d\n", numBlocks, loadTimer.getTimeLeft()); 
+        if (intakeDistance <= blockdistance && state == 0) {
+            // Flip the state to one so we dont count
+            // the same block multiple times.
+            state = 1;
+        } else if (intakeDistance > blockdistance && state == 1) {
+            // Flip the state back to zero so the next block
+            // can be detected.
+            state = 0;
+            numBlocks++;
+        } 
+
+        pros::delay(10);
+    }
+    loadTimer.pause();
+    //pros::lcd::print(1, "Blocks: %d Time: %d\n", numBlocks, loadTimer.getTimeLeft()); 
+
+
+    // We can add more intelligence here, if the number of 
+    // balls are lower than 6, then we could try to unjam the outtake.
+    // we run it backward and then try to outtake again.
+    // For now we dont do this, because if the block detection is
+    // Broken then we will be in a bad situation where we keep running the outtake forever.
+
+    // Run the outtake for a bit longer to ensure we
+    // got all the blocks.
+    chassis.arcade(0, 0);
+    TFlywheel.brake();
+    BFlywheel.brake();
+}
+
+void outtakeWithDistanceSensorAndJamDetection(int totalTime, int arcadeTime) {
+    // Start pushing back into the goal.
+    chassis.arcade(-80, 0);
+    while (true) {
+        if (backDistanceSensor.get() <= 136) {
+            break;
+        }
+        pros::delay(10);
+    }
+
+    TFlywheel.move(127);
+    BFlywheel.move(127);
+    PneumaticLoad.set_value(false);
+
+    // Start a 5s timer.
+    int arcadeCheckTime = totalTime - arcadeTime;
+    if (arcadeCheckTime < 0) {
+        arcadeCheckTime = 0;
+    }
+
+    lemlib::Timer loadTimer(totalTime);
+    
+    // 276 is the distance in mm that the sensor reads when there are no blocks
+    // 100 is a distance threshold that was determined through testing. 
+    int blockdistance = 110;
+    int numBlocks = 0;
+    int state = 0; // 0 = no blocks, 1 = one block
+
+    // We expect the first block to show up before 400ms
+    int timeToFirstBlock = 500;
+    while (numBlocks < 6 && !loadTimer.isDone()) {
+        if (numBlocks == 0) {
+            if (loadTimer.getTimeLeft() > timeToFirstBlock) {
+                // We might be jammed, because no blocks have come up
+                // even though we have spent timeToFirstBlock time waiting.
+                for (int i = 0; i <= 1; i++) {
+                    pros::delay(20);
+                    TFlywheel.move(-127);
+                    BFlywheel.move(-127);
+                    pros::delay(20);
+                    TFlywheel.move(127);
+                    BFlywheel.move(127);
+                }
+            }
+        }
+
+        // Only push back into the goal for a second and half, do not push back more.
+        // When we push more, the battery power is distributed and 
+        // the outtake does not work as well.
+        if (loadTimer.getTimeLeft() <= arcadeCheckTime) {
+            chassis.arcade(0, 0);
+        }
+
+        int intakeDistance = outtakeDistanceSensor.get();
+
         pros::lcd::print(1, "Blocks: %d Time: %d\n", numBlocks, loadTimer.getTimeLeft()); 
         if (intakeDistance <= blockdistance && state == 0) {
             // Flip the state to one so we dont count
@@ -207,6 +295,77 @@ void matchLoad(int arcadeSpeed, int time) {
     int numBlocks = 0;
     int state = 0; // 0 = no blocks, 1 = one block
     while (numBlocks < 6 && !loadTimer.isDone()) {
+        int intakeDistance = intakeDistanceSensor.get();
+
+        // Only push back into the goal for a second, do not push back more.
+        // When we push more, the battery power is distributed and 
+        // the outtake does not work as well.
+        if (loadTimer.getTimeLeft() < 1500) {
+            chassis.arcade(30, 0);
+        }
+
+        //pros::lcd::print(1, "Blocks: %d TLeft: %d TPassed: %d\n", numBlocks, loadTimer.getTimeLeft(), loadTimer.getTimePassed()); 
+        if (intakeDistance <= blockdistance && state == 0) {
+            // Flip the state to one so we dont count
+            // the same block multiple times.s
+            state = 1;
+            numBlocks++;
+        } else if (intakeDistance > blockdistance && state == 1) {
+            // Flip the state back to zero so the next block
+            // can be detected.
+            state = 0;
+        } 
+
+        pros::delay(20);
+    }
+    
+    loadTimer.pause();
+
+    // Run the intake for a bit longer to ensure we
+    // got all the blocks.
+    pros::delay(800);
+    BFlywheel.brake();
+    chassis.arcade(0, 0);
+}
+
+// This function runs the intake till all the blocks are loaded.
+// The idea is to use timing and the distancec sensor to determine when the
+// blocks are loaded.
+void matchLoadWithStuckDetection(int arcadeSpeed, int time) {
+    // Intake the blocks from the first match loader
+    PneumaticLoad.set_value(true);
+    
+    //Start the flywheels and start driving forward.
+    BFlywheel.move(127);
+    chassis.arcade(arcadeSpeed, 0);
+
+    // Start a timer.
+    lemlib::Timer loadTimer(time);
+
+    // 276 is the distance in mm that the sensor reads when there are no blocks
+    // 100 is a distance threshold that was determined through testing.
+    int blockdistance = 110;
+    int numBlocks = 0;
+    int state = 0; // 0 = no blocks, 1 = one block
+    int timeToFirstBlock = 500;
+    int numRetries = 0;
+    while (numBlocks < 6 && !loadTimer.isDone()) {
+        if (numRetries <= 1 && numBlocks == 0 && loadTimer.getTimePassed() > timeToFirstBlock) {
+            numRetries++;
+            // This means we cannot seem to get the blocks.
+            // backoff and try to slam back into the match loader.
+            chassis.arcade(0, 0);
+
+            chassis.arcade(-50, 0);
+            pros::delay(500);
+            chassis.arcade(127, 80);
+            pros::delay(250);
+            chassis.arcade(127, -80);
+            pros::delay(250);
+            chassis.arcade(arcadeSpeed, 50);
+            chassis.arcade(-50, 0);
+        }
+
         int intakeDistance = intakeDistanceSensor.get();
 
         // Only push back into the goal for a second, do not push back more.
@@ -647,8 +806,8 @@ void skillsWithDistanceSensor() {
     matchLoad(80, 3000);
     chassis.setPose(55, -52, chassis.getPose().theta);
     getToFirstDropOffMotionChained();
-    outtake(3500, 2000);
-    //outtakeWithDistanceSensor(3500, 2000);
+    //outtake(3500, 2000);
+    outtakeWithDistanceSensor(3500, 2000);
     chassis.setPose(-31, -48, 270);
 
     // Load the second set of blocks and dropoff.
@@ -665,7 +824,8 @@ void skillsWithDistanceSensor() {
     matchLoad(60, 3500);
     chassis.setPose(-55, 48, chassis.getPose().theta);
     getToThirdDropOffMotionChained();
-    outtake(3500, 1500);
+    //outtake(3500, 1500);
+    outtakeWithDistanceSensor(3500, 1500);
     chassis.turnToHeading(90, 1000);
     chassis.setPose(31, 47, 90); 
 

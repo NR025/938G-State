@@ -59,9 +59,13 @@ void BlockMovement () {
 
     // Mid-Goal Outtake
     else if (MasterCont.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
-        TFlywheel.move(60);
-        BFlywheel.move(110);
-        
+        if (MasterCont.get_digital(pros::E_CONTROLLER_DIGITAL_B)) {
+            TFlywheel.move(80);
+            BFlywheel.move(60);
+        } else {
+            TFlywheel.move(100);
+            BFlywheel.move(100);
+        }
     } else {
         TFlywheel.brake();
         BFlywheel.brake();

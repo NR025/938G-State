@@ -137,6 +137,14 @@ void testOuttake() {
 	outtake(1500);
 }
 
+void testMatchLoader() {
+	chassis.setPose(-31, -48, 270);
+
+    // Load the second set of blocks and dropoff.
+    getToSecondMatchLoader();
+	matchLoadWithStuckDetection(80, 3000);
+}
+
 /**
  * Runs the user autonomous code. This function will be started in its own task
  * with the default priority and stack size whenever the robot is enabled via
@@ -149,9 +157,11 @@ void testOuttake() {
  * from where it left off.
  */
 void autonomous() {
+	
+	// This means we cannot seem to get the blocks.
+	// backoff and try to slam back into the match loader.
 	skillsWithDistanceSensor();
-	//# State the path.
-	//_PathLemSkills();
+	//testMatchLoader();
 	//testDistanceSensors();
 	//testTurn();
 	//squareTest();
