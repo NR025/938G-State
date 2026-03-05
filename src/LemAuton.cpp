@@ -404,9 +404,11 @@ void getToFirstMatchLoader() {
     chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
     chassis.setPose(49, -8, 180);
     PneumaticLoad.set_value(true);
- 
+    
+    TFlywheel.move(127);
     chassis.moveToPoint(49, -52, 5000);
     chassis.waitUntilDone();
+    TFlywheel.brake();
 
     // Calculate the actual robot position and ensure we drove the right 
     // distance in case we are off using the front distance sensor.
@@ -811,7 +813,6 @@ void skillsWithDistanceSensor() {
     outtakeWithDistanceSensor(3500, 2000, 7);
     chassis.setPose(-31, -48, 270);
 
-    /*
     // Load the second set of blocks and dropoff.
     getToSecondMatchLoader();
     matchLoad(60, 3000);
@@ -842,6 +843,5 @@ void skillsWithDistanceSensor() {
     chassis.setPose(31, 47, 90);
 
     parkMotionChained();
-    */
 }
 

@@ -59,14 +59,19 @@ void BlockMovement () {
 
     // Mid-Goal Outtake
     else if (MasterCont.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
-        if (MasterCont.get_digital(pros::E_CONTROLLER_DIGITAL_B)) {
+        //if (MasterCont.get_digital(pros::E_CONTROLLER_DIGITAL_B)) {
+            TFlywheel.move(60);
+            BFlywheel.move(80);
+        /*} 
+        else {
             TFlywheel.move(80);
-            BFlywheel.move(60);
-        } else {
-            TFlywheel.move(100);
             BFlywheel.move(100);
-        }
-    } else {
+        }*/
+    } else if (MasterCont.get_digital(pros::E_CONTROLLER_DIGITAL_B)) {
+            TFlywheel.move(40);
+            BFlywheel.move(40);
+        } 
+    else {
         TFlywheel.brake();
         BFlywheel.brake();
     }
