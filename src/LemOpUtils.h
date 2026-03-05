@@ -18,6 +18,7 @@ extern double PowerFactor;
 extern double TurnFactor;
 extern bool PneuDescore;
 extern bool PneuMatchLoad;
+extern bool PneuOuttakeBool;
 
 //Declare opcontrol functions.
 void DriveMovement();

@@ -15,6 +15,7 @@ double PowerFactor = 1;
 double TurnFactor = 1;
 bool PneuDescore = false;
 bool PneuMatchLoad = false;
+bool PneuOuttakeBool = true;
 //Define drivetrain function.
 void DriveMovement() {
 
@@ -54,12 +55,17 @@ void BlockMovement () {
 
         TFlywheel.move(-127);
         BFlywheel.move(-127);
+    }
 
+    // Mid-Goal Outtake
+    else if (MasterCont.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
+        TFlywheel.move(60);
+        BFlywheel.move(110);
+        
     } else {
         TFlywheel.brake();
         BFlywheel.brake();
     }
-
 }
 
 void PneuMovement () {
@@ -98,6 +104,24 @@ void PneuMovement () {
             PneuMatchLoad = false;
             pros::delay(250);
 
+        }
+
+    }
+
+    // Outtake Pnue
+    if (MasterCont.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
+
+        if (PneuOuttakeBool == false) {
+            
+            PneuOuttake.set_value(false);
+            PneuOuttakeBool = true;
+            pros::delay(250);
+
+        } else {
+
+            PneuOuttake.set_value(true);
+            PneuOuttakeBool = false;
+            pros::delay(250);
         }
 
     }

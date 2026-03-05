@@ -171,7 +171,7 @@ void outtakeWithDistanceSensor(int totalTime, int arcadeTime) {
         pros::delay(10);
     }
     loadTimer.pause();
-    pros::lcd::print(1, "Blocks: %d Time: %d\n", numBlocks, loadTimer.getTimeLeft()); 
+    //pros::lcd::print(1, "Blocks: %d Time: %d\n", numBlocks, loadTimer.getTimeLeft()); 
 
 
     // We can add more intelligence here, if the number of 
@@ -198,7 +198,7 @@ void matchLoad(int arcadeSpeed, int time) {
     BFlywheel.move(127);
     chassis.arcade(arcadeSpeed, 0);
 
-    // Start a 2s timer.
+    // Start a timer.
     lemlib::Timer loadTimer(time);
 
     // 276 is the distance in mm that the sensor reads when there are no blocks
@@ -648,6 +648,7 @@ void skillsWithDistanceSensor() {
     chassis.setPose(55, -52, chassis.getPose().theta);
     getToFirstDropOffMotionChained();
     outtake(3500, 2000);
+    //outtakeWithDistanceSensor(3500, 2000);
     chassis.setPose(-31, -48, 270);
 
     // Load the second set of blocks and dropoff.
@@ -655,7 +656,8 @@ void skillsWithDistanceSensor() {
     matchLoad(60, 3000);
     chassis.setPose(-55, -48, chassis.getPose().theta);
     getToSecondDropOff();
-    outtake(3500, 1000);
+    //outtake(3500, 1000);
+    outtakeWithDistanceSensor(3500, 2000);
     chassis.setPose(-31, -48, 270);
 
     // Load the third set of blocks and dropoff.
@@ -672,7 +674,8 @@ void skillsWithDistanceSensor() {
     matchLoad(60, 3000);
     chassis.setPose(55, 46, chassis.getPose().theta);
     getToFourthDropOff();
-    outtake(3500, 1500);
+    //outtake(3500, 1500);
+    outtakeWithDistanceSensor(3500, 1500);
     chassis.turnToHeading(90, 1000);
     chassis.setPose(31, 47, 90);
 
