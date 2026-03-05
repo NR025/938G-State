@@ -62,7 +62,7 @@ float calculateDistanceFromBack() {
 
 
 
-void outtake(int totalTime, int arcadeTime) {
+void outtake(int totalTime, int arcadeTime, int numExpectedBlocks) {
     TFlywheel.move(127);
     BFlywheel.move(127);
     chassis.arcade(-80, 0);
@@ -81,7 +81,7 @@ void outtake(int totalTime, int arcadeTime) {
     int blockdistance = 110;
     int numBlocks = 0;
     int state = 0; // 0 = no blocks, 1 = one block
-    while (numBlocks < 6 && !loadTimer.isDone()) {
+    while (numBlocks < numExpectedBlocks && !loadTimer.isDone()) {
 
         // Only push back into the goal for a second and half, do not push back more.
         // When we push more, the battery power is distributed and 
@@ -115,12 +115,13 @@ void outtake(int totalTime, int arcadeTime) {
 
     // Run the outtake for a bit longer to ensure we
     // got all the blocks.
+    pros::delay(500);
     chassis.arcade(0, 0);
     TFlywheel.brake();
     BFlywheel.brake();
 }
 
-void outtakeWithDistanceSensor(int totalTime, int arcadeTime) {
+void outtakeWithDistanceSensor(int totalTime, int arcadeTime, int numExpectedBlocks) {
     // Start pushing back into the goal.
     chassis.arcade(-80, 0);
     while (true) {
@@ -147,8 +148,7 @@ void outtakeWithDistanceSensor(int totalTime, int arcadeTime) {
     int blockdistance = 110;
     int numBlocks = 0;
     int state = 0; // 0 = no blocks, 1 = one block
-    while (numBlocks < 6 && !loadTimer.isDone()) {
-
+    while (numBlocks < numExpectedBlocks && !loadTimer.isDone()) {
         // Only push back into the goal for a second and half, do not push back more.
         // When we push more, the battery power is distributed and 
         // the outtake does not work as well.
@@ -173,7 +173,7 @@ void outtakeWithDistanceSensor(int totalTime, int arcadeTime) {
         pros::delay(10);
     }
     loadTimer.pause();
-    //pros::lcd::print(1, "Blocks: %d Time: %d\n", numBlocks, loadTimer.getTimeLeft()); 
+    pros::lcd::print(1, "Blocks: %d Time: %d\n", numBlocks, loadTimer.getTimeLeft()); 
 
 
     // We can add more intelligence here, if the number of 
@@ -184,6 +184,7 @@ void outtakeWithDistanceSensor(int totalTime, int arcadeTime) {
 
     // Run the outtake for a bit longer to ensure we
     // got all the blocks.
+    pros::delay(500);
     chassis.arcade(0, 0);
     TFlywheel.brake();
     BFlywheel.brake();
@@ -516,7 +517,7 @@ void getToFirstDropOffMotionChained() {
     // The X should be -31 however it needs to be 
     // -30 for some reason. We backup till the back
     // distance sensor shows us that we are close to the goal.
-    chassis.moveToPoint(-25, -48, 2250, {.forwards = false, .maxSpeed = 80});
+    chassis.moveToPoint(-30, -48, 2250, {.forwards = false, .maxSpeed = 80});
     chassis.waitUntilDone();
 }
 
@@ -524,12 +525,12 @@ void getToSecondMatchLoader() {
     PneumaticLoad.set_value(true);
     // THis is intentionally -47 instead of -48 because the
     // pickup was not working.
-    chassis.moveToPoint(-55, -47, 2000, {.maxSpeed = 127});
+    chassis.moveToPoint(-55, -46, 2000, {.maxSpeed = 127});
 	chassis.waitUntilDone();
 }
 
 void getToSecondDropOff() {
-    chassis.moveToPoint(-27, -48, 2250, {.forwards = false, .maxSpeed = 127});
+    chassis.moveToPoint(-30, -48, 2250, {.forwards = false, .maxSpeed = 127});
     chassis.waitUntilDone();
     PneumaticLoad.set_value(false);
 }
@@ -708,7 +709,7 @@ void getToThirdDropOffMotionChained() {
     // The X should be 31 however it needs to be 
     // 28 for some reason. We backup till the back
     // distance sensor shows us that we are close to the goal.
-    chassis.moveToPoint(28, 47, 2000, {.forwards = false, .maxSpeed = 80});
+    chassis.moveToPoint(30, 47, 2000, {.forwards = false, .maxSpeed = 80});
     chassis.waitUntilDone();
 }
 
@@ -716,7 +717,7 @@ void getToFourthMatchLoader() {
     PneumaticLoad.set_value(true);
     chassis.turnToHeading(90, 400);
     chassis.waitUntilDone();
-    chassis.moveToPoint(55, 45, 2000, {.maxSpeed = 100});
+    chassis.moveToPoint(55, 47, 2000, {.maxSpeed = 100});
 	chassis.waitUntilDone();
 }
 
@@ -807,16 +808,17 @@ void skillsWithDistanceSensor() {
     chassis.setPose(55, -52, chassis.getPose().theta);
     getToFirstDropOffMotionChained();
     //outtake(3500, 2000);
-    outtakeWithDistanceSensor(3500, 2000);
+    outtakeWithDistanceSensor(3500, 2000, 7);
     chassis.setPose(-31, -48, 270);
 
+    /*
     // Load the second set of blocks and dropoff.
     getToSecondMatchLoader();
     matchLoad(60, 3000);
     chassis.setPose(-55, -48, chassis.getPose().theta);
     getToSecondDropOff();
     //outtake(3500, 1000);
-    outtakeWithDistanceSensor(3500, 2000);
+    outtakeWithDistanceSensor(3500, 2000, 6);
     chassis.setPose(-31, -48, 270);
 
     // Load the third set of blocks and dropoff.
@@ -825,7 +827,7 @@ void skillsWithDistanceSensor() {
     chassis.setPose(-55, 48, chassis.getPose().theta);
     getToThirdDropOffMotionChained();
     //outtake(3500, 1500);
-    outtakeWithDistanceSensor(3500, 1500);
+    outtakeWithDistanceSensor(3500, 1500, 6);
     chassis.turnToHeading(90, 1000);
     chassis.setPose(31, 47, 90); 
 
@@ -835,10 +837,11 @@ void skillsWithDistanceSensor() {
     chassis.setPose(55, 46, chassis.getPose().theta);
     getToFourthDropOff();
     //outtake(3500, 1500);
-    outtakeWithDistanceSensor(3500, 1500);
+    outtakeWithDistanceSensor(3500, 1500, 6);
     chassis.turnToHeading(90, 1000);
     chassis.setPose(31, 47, 90);
 
     parkMotionChained();
+    */
 }
 
