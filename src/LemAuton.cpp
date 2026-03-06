@@ -453,7 +453,7 @@ void matchLoad(int arcadeSpeed, int time) {
 
     // Run the intake for a bit longer to ensure we
     // got all the blocks.
-    pros::delay(800);
+    pros::delay(900);
     chassis.arcade(0, 0);
 }
 
@@ -461,6 +461,7 @@ void matchLoad(int arcadeSpeed, int time) {
 // The idea is to use timing and the distancec sensor to determine when the
 // blocks are loaded.
 void matchLoadWithStuckDetection(int arcadeSpeed, int time) {
+    
     // Intake the blocks from the first match loader
     PneumaticLoad.set_value(true);
     
@@ -479,31 +480,15 @@ void matchLoadWithStuckDetection(int arcadeSpeed, int time) {
     int timeToFirstBlock = 500;
     int numRetries = 0;
     while (numBlocks < 6 && !loadTimer.isDone()) {
-        if (numRetries <= 1 && numBlocks == 0 && loadTimer.getTimePassed() > timeToFirstBlock) {
-            numRetries++;
-            // This means we cannot seem to get the blocks.
-            // backoff and try to slam back into the match loader.
-            chassis.arcade(0, 0);
-
-            chassis.arcade(-50, 0);
-            pros::delay(500);
-            chassis.arcade(127, 80);
-            pros::delay(250);
-            chassis.arcade(127, -80);
-            pros::delay(250);
-            chassis.arcade(arcadeSpeed, 50);
-            chassis.arcade(-50, 0);
-        }
-
-        int intakeDistance = intakeDistanceSensor.get();
-
+        pros::lcd::print(1, "B: %d T: %d\n", numBlocks, loadTimer.getTimePassed()); 
         // Only push back into the goal for a second, do not push back more.
         // When we push more, the battery power is distributed and 
         // the outtake does not work as well.
-        if (loadTimer.getTimeLeft() < 1500) {
+        if (loadTimer.getTimeLeft() < 1000) {
             chassis.arcade(30, 0);
         }
 
+        int intakeDistance = intakeDistanceSensor.get();
         //pros::lcd::print(1, "Blocks: %d TLeft: %d TPassed: %d\n", numBlocks, loadTimer.getTimeLeft(), loadTimer.getTimePassed()); 
         if (intakeDistance <= blockdistance && state == 0) {
             // Flip the state to one so we dont count
@@ -516,6 +501,18 @@ void matchLoadWithStuckDetection(int arcadeSpeed, int time) {
             state = 0;
         } 
 
+        if (numBlocks == 0 && numRetries == 0 && loadTimer.getTimePassed() > timeToFirstBlock) {
+            // This means we cannot seem to get the blocks.
+            // backoff and try to slam back into the match loader.
+            numRetries++;
+            chassis.arcade(0, 0);
+            chassis.arcade(-80, 0);
+            pros::delay(200);
+            chassis.arcade(80, 0);
+            pros::delay(250);
+            chassis.arcade(arcadeSpeed, 0);
+        }
+
         pros::delay(20);
     }
     
@@ -524,8 +521,8 @@ void matchLoadWithStuckDetection(int arcadeSpeed, int time) {
     // Run the intake for a bit longer to ensure we
     // got all the blocks.
     pros::delay(800);
-    BFlywheel.brake();
     chassis.arcade(0, 0);
+    BFlywheel.brake();
 }
 
 void getToFirstMatchLoader() {
@@ -748,7 +745,7 @@ void parkMotionChained() {
     //pros::lcd::print(2, "Y: %f\n", currentY); 
     
     BFlywheel.move(127);
-    chassis.moveToPoint(68, -14, 3000, {.maxSpeed = 127});
+    chassis.moveToPoint(68, -13, 3000, {.maxSpeed = 127});
     chassis.waitUntilDone();
     //driveForwardTillDistanceUsingBackSensor();
     // Keep running the intake till the balls are all out.
