@@ -810,7 +810,6 @@ void skillsWithDistanceSensor() {
     // So will have to change the getToXXXDropOffMotionChained
     // so that we are almost at the drop off.
     
-    /*
     // Load the first set of blocks and dropoff.
     getToFirstMatchLoader();
     //matchLoad(80, 2500);
@@ -848,9 +847,7 @@ void skillsWithDistanceSensor() {
     //outtake(3500, 1500);
     outtakeWithDistanceSensor(3000, 1200, 6);
     //chassis.turnToHeading(90, 1000);
-    */
     chassis.setPose(31, 47, chassis.getPose().theta);
-    chassis.setPose(31, 47, 90);
     
     parkMotionChained();
 }
