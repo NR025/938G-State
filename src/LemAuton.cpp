@@ -460,6 +460,12 @@ void matchLoad(int arcadeSpeed, int time) {
 // This function runs the intake till all the blocks are loaded.
 // The idea is to use timing and the distancec sensor to determine when the
 // blocks are loaded.
+//
+// 1.For some reason the intake is stopping for the first and the 
+// second match loads. It should not stop for a while.
+// 2. What happens if the first block is not detected? Then
+//    the stuck logic will run unnecessarily. That add about 800ms 
+//    of additional time.
 void matchLoadWithStuckDetection(int arcadeSpeed, int time) {
     
     // Intake the blocks from the first match loader
@@ -507,9 +513,9 @@ void matchLoadWithStuckDetection(int arcadeSpeed, int time) {
             numRetries++;
             chassis.arcade(0, 0);
             chassis.arcade(-60, 0);
-            pros::delay(300);
+            pros::delay(250);
             chassis.arcade(40, 0);
-            pros::delay(400);
+            pros::delay(300);
             chassis.arcade(arcadeSpeed, 0);
         }
 
@@ -711,7 +717,7 @@ void getToThirdDropOffMotionChained() {
     // The X should be 31 however it needs to be 
     // 27 for some reason. We backup till the back
     // distance sensor shows us that we are close to the goal.
-    chassis.moveToPoint(27, 47, 2000, {.forwards = false, .maxSpeed = 80});
+    chassis.moveToPoint(26, 47, 2000, {.forwards = false, .maxSpeed = 80});
     chassis.waitUntilDone();
 }
 
@@ -753,16 +759,42 @@ void parkMotionChained() {
     BFlywheel.brake();
 }
 
+// Checks if we are stuck in addition to the
+// distance checks. It determines that it is stuck if
+// it has moved less than 0.5" in 300ms.
 void driveForwardTillDistanceUsingBackSensor() {
-    lemlib::Timer parkTimer(5000); 
-    chassis.moveToPoint(68, -15, 3000, {.maxSpeed = 127, .minSpeed = 127});
+    int timeout = 5000;
+    int stuckTimeout = 300;
+    int lastMoveTime = 0;
+    float lastY = 0;
+    float minimumDistance = 0.5;
+    bool triedUnsticking = false;
+    lemlib::Timer parkTimer(timeout);
+    chassis.moveToPoint(68, -13, timeout, {.maxSpeed = 127, .minSpeed = 100});
     while (!parkTimer.isDone()) {
         float currentY = calculateDistanceFromBack();
+        if (lastMoveTime == 0 || abs(lastY - currentY) > minimumDistance) {
+            lastMoveTime = parkTimer.getTimePassed();
+            lastY = currentY;
+        }
+
+        // If we have not moved for a little while then try unsticking.
+        if (triedUnsticking == false && (parkTimer.getTimePassed() - lastMoveTime) > stuckTimeout) {
+            // We have not moved in stuckTimeout time. So likely we are
+            // stuck. Back off a little and try again.
+            triedUnsticking = true;
+            pros::lcd::print(1, "stuck Detected"); 
+            chassis.cancelAllMotions();
+            chassis.arcade(-100, 0);
+            pros::delay(300);
+            chassis.moveToPoint(68, -13, timeout, {.maxSpeed = 127, .minSpeed = 100});
+        }
+
         int confidence = backDistanceSensor.get_confidence();
         if (currentY < 8 && confidence > 40) {
             break;
         }
-        //pros::lcd::print(2, "Y: %f confidence: %d\n", currentY, confidence); 
+        pros::lcd::print(2, "Y: %f confidence: %d\n", currentY, confidence); 
         pros::delay(10);
     }
     chassis.cancelAllMotions();
