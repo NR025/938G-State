@@ -751,7 +751,7 @@ void parkMotionChained() {
     //pros::lcd::print(2, "Y: %f\n", currentY); 
     
     BFlywheel.move(127);
-    chassis.moveToPoint(68, -13, 3000, {.maxSpeed = 127});
+    chassis.moveToPoint(68, -14, 3000, {.maxSpeed = 127});
     chassis.waitUntilDone();
     //driveForwardTillDistanceUsingBackSensor();
     // Keep running the intake till the balls are all out.
@@ -770,7 +770,7 @@ void driveForwardTillDistanceUsingBackSensor() {
     float minimumDistance = 0.5;
     bool triedUnsticking = false;
     lemlib::Timer parkTimer(timeout);
-    chassis.moveToPoint(68, -13, timeout, {.maxSpeed = 127, .minSpeed = 100});
+    chassis.moveToPoint(68, -14, timeout, {.maxSpeed = 127, .minSpeed = 100});
     while (!parkTimer.isDone()) {
         float currentY = calculateDistanceFromBack();
         if (lastMoveTime == 0 || abs(lastY - currentY) > minimumDistance) {
@@ -787,7 +787,7 @@ void driveForwardTillDistanceUsingBackSensor() {
             chassis.cancelAllMotions();
             chassis.arcade(-100, 0);
             pros::delay(300);
-            chassis.moveToPoint(68, -13, timeout, {.maxSpeed = 127, .minSpeed = 100});
+            chassis.moveToPoint(68, -14, timeout, {.maxSpeed = 127, .minSpeed = 100});
         }
 
         int confidence = backDistanceSensor.get_confidence();
