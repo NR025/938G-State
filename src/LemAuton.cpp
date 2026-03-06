@@ -643,7 +643,7 @@ void getToThirdMatchLoaderMotionChained() {
     chassis.setPose(intendedX, currentY, 0);
     //pros::lcd::print(1, "Y: %f\n", currentY); 
 
-    chassis.moveToPose(intendedX, 49, 0, 2000, {.maxSpeed = 60});
+    chassis.moveToPose(intendedX, 49.5, 0, 2000, {.maxSpeed = 60});
     chassis.waitUntilDone();
 
     // Turn towards the match loader.
@@ -651,7 +651,7 @@ void getToThirdMatchLoaderMotionChained() {
     chassis.waitUntilDone();
 
     // Bring down the loader and drive towards the loader.
-    chassis.moveToPoint(-54, 48, 4000, {.maxSpeed = 80});
+    chassis.moveToPoint(-54, 48.5, 4000, {.maxSpeed = 80});
     chassis.waitUntilDone();
 }
 
@@ -748,7 +748,7 @@ void parkMotionChained() {
     //pros::lcd::print(2, "Y: %f\n", currentY); 
     
     BFlywheel.move(127);
-    chassis.moveToPoint(68, -12, 3000, {.maxSpeed = 127});
+    chassis.moveToPoint(68, -14, 3000, {.maxSpeed = 127});
     chassis.waitUntilDone();
     //driveForwardTillDistanceUsingBackSensor();
     // Keep running the intake till the balls are all out.
@@ -757,7 +757,7 @@ void parkMotionChained() {
 }
 
 void driveForwardTillDistanceUsingBackSensor() {
-    lemlib::Timer parkTimer(3000); 
+    lemlib::Timer parkTimer(5000); 
     chassis.moveToPoint(68, -15, 3000, {.maxSpeed = 127, .minSpeed = 127});
     while (!parkTimer.isDone()) {
         float currentY = calculateDistanceFromBack();
@@ -790,14 +790,13 @@ void skillsWithDistanceSensor() {
     //outtakeWithDistanceSensor(3500, 2000, 7);
     chassis.setPose(-31, -48, 270);
 
-    /*
     // Load the second set of blocks and dropoff.
     getToSecondMatchLoader();
     matchLoad(60, 2500);
     chassis.setPose(-55, -48, chassis.getPose().theta);
     getToSecondDropOff();
     //outtake(3500, 1000);
-    outtakeWithDistanceSensor(3000, 1500, 6);
+    outtakeWithDistanceSensor(3000, 1200, 6);
     chassis.setPose(-31, -48, 270);
     
     // Load the third set of blocks and dropoff.
@@ -805,7 +804,7 @@ void skillsWithDistanceSensor() {
     matchLoad(60, 2500);
     chassis.setPose(-55, 48, chassis.getPose().theta);
     getToThirdDropOffMotionChained();
-    outtake(3000, 1500, 6);
+    outtake(3000, 1200, 6);
     //outtakeWithDistanceSensor(3500, 1500, 6);
     //chassis.turnToHeading(90, 1000);
     chassis.setPose(31, 47, chassis.getPose().theta); 
@@ -816,11 +815,10 @@ void skillsWithDistanceSensor() {
     chassis.setPose(55, 47, chassis.getPose().theta);
     getToFourthDropOff();
     //outtake(3500, 1500);
-    outtakeWithDistanceSensor(3000, 1500, 6);
+    outtakeWithDistanceSensor(3000, 1200, 6);
     //chassis.turnToHeading(90, 1000);
     chassis.setPose(31, 47, chassis.getPose().theta);
     
     parkMotionChained();
-    */
 }
 
