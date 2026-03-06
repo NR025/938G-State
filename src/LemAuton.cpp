@@ -305,7 +305,7 @@ void matchLoad(int arcadeSpeed, int time) {
             chassis.arcade(30, 0);
         }
 
-        //pros::lcd::print(1, "Blocks: %d TLeft: %d TPassed: %d\n", numBlocks, loadTimer.getTimeLeft(), loadTimer.getTimePassed()); 
+        pros::lcd::print(1, "Blocks: %d TLeft: %d TPassed: %d\n", numBlocks, loadTimer.getTimeLeft(), loadTimer.getTimePassed()); 
         if (intakeDistance <= blockdistance && state == 0) {
             // Flip the state to one so we dont count
             // the same block multiple times.s
@@ -405,10 +405,8 @@ void getToFirstMatchLoader() {
     chassis.setPose(49, -8, 180);
     PneumaticLoad.set_value(true);
     
-    TFlywheel.move(127);
     chassis.moveToPoint(49, -52, 5000);
     chassis.waitUntilDone();
-    TFlywheel.brake();
 
     // Calculate the actual robot position and ensure we drove the right 
     // distance in case we are off using the front distance sensor.
@@ -527,7 +525,7 @@ void getToSecondMatchLoader() {
     PneumaticLoad.set_value(true);
     // THis is intentionally -47 instead of -48 because the
     // pickup was not working.
-    chassis.moveToPoint(-55, -46, 2000, {.maxSpeed = 127});
+    chassis.moveToPoint(-55, -48, 2000, {.maxSpeed = 127});
 	chassis.waitUntilDone();
 }
 
@@ -656,7 +654,7 @@ void getToThirdDropOff() {
 }
 
 void getToThirdDropOffMotionChained() {
-    chassis.moveToPoint(-50, 49, 2000, {.forwards = false, .minSpeed = 100});
+    chassis.moveToPoint(-50, 48, 2000, {.forwards = false, .minSpeed = 100});
     // Wait for movement until 3 inches before bringing
     // the intake up.
     chassis.waitUntil(3);
@@ -806,41 +804,41 @@ void skillsWithDistanceSensor() {
 
     // Load the first set of blocks and dropoff.
     getToFirstMatchLoader();
-    matchLoad(80, 3000);
+    matchLoad(80, 2500);
     chassis.setPose(55, -52, chassis.getPose().theta);
     getToFirstDropOffMotionChained();
-    //outtake(3500, 2000);
-    outtakeWithDistanceSensor(3500, 2000, 7);
+    outtake(3000, 2000, 7);
+    //outtakeWithDistanceSensor(3500, 2000, 7);
     chassis.setPose(-31, -48, 270);
 
     // Load the second set of blocks and dropoff.
     getToSecondMatchLoader();
-    matchLoad(60, 3000);
+    matchLoad(60, 2500);
     chassis.setPose(-55, -48, chassis.getPose().theta);
     getToSecondDropOff();
     //outtake(3500, 1000);
-    outtakeWithDistanceSensor(3500, 2000, 6);
+    outtakeWithDistanceSensor(3000, 2000, 6);
     chassis.setPose(-31, -48, 270);
-
+    
     // Load the third set of blocks and dropoff.
     getToThirdMatchLoaderMotionChained();
-    matchLoad(60, 3500);
+    matchLoad(60, 2500);
     chassis.setPose(-55, 48, chassis.getPose().theta);
     getToThirdDropOffMotionChained();
-    //outtake(3500, 1500);
-    outtakeWithDistanceSensor(3500, 1500, 6);
-    chassis.turnToHeading(90, 1000);
-    chassis.setPose(31, 47, 90); 
+    outtake(3000, 1500, 6);
+    //outtakeWithDistanceSensor(3500, 1500, 6);
+    //chassis.turnToHeading(90, 1000);
+    chassis.setPose(31, 47, chassis.getPose().theta); 
 
     // Load the fourth set of blocks and drop off.
     getToFourthMatchLoader();
-    matchLoad(60, 3000);
-    chassis.setPose(55, 46, chassis.getPose().theta);
+    matchLoad(60, 2500);
+    chassis.setPose(55, 47, chassis.getPose().theta);
     getToFourthDropOff();
     //outtake(3500, 1500);
-    outtakeWithDistanceSensor(3500, 1500, 6);
-    chassis.turnToHeading(90, 1000);
-    chassis.setPose(31, 47, 90);
+    outtakeWithDistanceSensor(3000, 1500, 6);
+    //chassis.turnToHeading(90, 1000);
+    chassis.setPose(31, 47, chassis.getPose().theta);
 
     parkMotionChained();
 }
