@@ -207,7 +207,7 @@ void outtake(int totalTime, int arcadeTime, int numExpectedBlocks) {
     
     // 276 is the distance in mm that the sensor reads when there are no blocks
     // 100 is a distance threshold that was determined through testing. 
-    int blockdistance = 110;
+    int blockdistance = 80;
     int numBlocks = 0;
     int state = 0; // 0 = no blocks, 1 = one block
     while (numBlocks < numExpectedBlocks && !loadTimer.isDone()) {
@@ -302,7 +302,7 @@ void outtakeWithDistanceSensor(int totalTime, int arcadeTime, int numExpectedBlo
         pros::delay(10);
     }
     loadTimer.pause();
-    pros::lcd::print(1, "Blocks: %d Time: %d\n", numBlocks, loadTimer.getTimeLeft()); 
+    //pros::lcd::print(1, "Blocks: %d Time: %d\n", numBlocks, loadTimer.getTimeLeft()); 
 
 
     // We can add more intelligence here, if the number of 
@@ -374,7 +374,7 @@ void outtakeWithDistanceSensorAndJamDetection(int totalTime, int arcadeTime) {
 
         int intakeDistance = outtakeDistanceSensor.get();
 
-        pros::lcd::print(1, "Blocks: %d Time: %d\n", numBlocks, loadTimer.getTimeLeft()); 
+        //pros::lcd::print(1, "Blocks: %d Time: %d\n", numBlocks, loadTimer.getTimeLeft()); 
         if (intakeDistance <= blockdistance && state == 0) {
             // Flip the state to one so we dont count
             // the same block multiple times.
@@ -480,7 +480,7 @@ void matchLoadWithStuckDetection(int arcadeSpeed, int time) {
     int timeToFirstBlock = 500;
     int numRetries = 0;
     while (numBlocks < 6 && !loadTimer.isDone()) {
-        pros::lcd::print(1, "B: %d T: %d\n", numBlocks, loadTimer.getTimePassed()); 
+        //pros::lcd::print(1, "B: %d T: %d\n", numBlocks, loadTimer.getTimePassed()); 
         // Only push back into the goal for a second, do not push back more.
         // When we push more, the battery power is distributed and 
         // the outtake does not work as well.
@@ -506,10 +506,10 @@ void matchLoadWithStuckDetection(int arcadeSpeed, int time) {
             // backoff and try to slam back into the match loader.
             numRetries++;
             chassis.arcade(0, 0);
-            chassis.arcade(-80, 0);
-            pros::delay(200);
-            chassis.arcade(80, 0);
-            pros::delay(250);
+            chassis.arcade(-60, 0);
+            pros::delay(300);
+            chassis.arcade(40, 0);
+            pros::delay(400);
             chassis.arcade(arcadeSpeed, 0);
         }
 
@@ -522,7 +522,7 @@ void matchLoadWithStuckDetection(int arcadeSpeed, int time) {
     // got all the blocks.
     pros::delay(800);
     chassis.arcade(0, 0);
-    BFlywheel.brake();
+    //BFlywheel.brake();
 }
 
 void getToFirstMatchLoader() {
@@ -545,7 +545,7 @@ void getToFirstMatchLoader() {
     chassis.waitUntilDone();
     
     // Drive torwards the match loader and intake.
-    chassis.moveToPoint(55, -52, 2000);
+    chassis.moveToPoint(51, -52, 2000);
     chassis.waitUntilDone();
 }
 
@@ -762,7 +762,7 @@ void driveForwardTillDistanceUsingBackSensor() {
         if (currentY < 8 && confidence > 40) {
             break;
         }
-        pros::lcd::print(2, "Y: %f confidence: %d\n", currentY, confidence); 
+        //pros::lcd::print(2, "Y: %f confidence: %d\n", currentY, confidence); 
         pros::delay(10);
     }
     chassis.cancelAllMotions();
@@ -780,7 +780,8 @@ void skillsWithDistanceSensor() {
     
     // Load the first set of blocks and dropoff.
     getToFirstMatchLoader();
-    matchLoad(80, 2500);
+    //matchLoad(80, 2500);
+    matchLoadWithStuckDetection(60, 2500);
     chassis.setPose(55, -52, chassis.getPose().theta);
     getToFirstDropOffMotionChained();
     outtake(3000, 1200, 7);
@@ -789,7 +790,7 @@ void skillsWithDistanceSensor() {
 
     // Load the second set of blocks and dropoff.
     getToSecondMatchLoader();
-    matchLoad(60, 2500);
+    matchLoadWithStuckDetection(60, 2500);
     chassis.setPose(-55, -48, chassis.getPose().theta);
     getToSecondDropOff();
     //outtake(3500, 1000);
@@ -798,7 +799,7 @@ void skillsWithDistanceSensor() {
     
     // Load the third set of blocks and dropoff.
     getToThirdMatchLoaderMotionChained();
-    matchLoad(60, 2500);
+    matchLoadWithStuckDetection(60, 2500);
     chassis.setPose(-55, 48, chassis.getPose().theta);
     getToThirdDropOffMotionChained();
     outtake(3000, 1200, 6);
@@ -808,7 +809,7 @@ void skillsWithDistanceSensor() {
 
     // Load the fourth set of blocks and drop off.
     getToFourthMatchLoader();
-    matchLoad(60, 2500);
+    matchLoadWithStuckDetection(60, 2500);
     chassis.setPose(55, 47, chassis.getPose().theta);
     getToFourthDropOff();
     //outtake(3500, 1500);
